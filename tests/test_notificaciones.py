@@ -49,3 +49,16 @@ def test_ejecutar_corrida_fallo_emite_failed_y_email(caplog):
     assert estado == "failed"
     assert _estados(caplog) == ["started", "failed"]
     assert emails == [("r2", "boom")]  # el fallo NO se propaga; se notifica
+
+
+def test_email_que_revienta_no_tumba_la_corrida(caplog):
+    def trabajo():
+        raise ValueError("boom")
+
+    def enviar_que_falla(rid, e):
+        raise RuntimeError("SMTP caído")
+
+    with caplog.at_level(logging.INFO, logger=_LOGGER):
+        estado = ejecutar_corrida("r3", trabajo=trabajo, enviar_email=enviar_que_falla)
+
+    assert estado == "failed"  # no propaga el error del email

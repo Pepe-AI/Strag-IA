@@ -33,7 +33,14 @@ def ejecutar_corrida(
         trabajo()
     except Exception as e:
         evento_corrida("failed", run_id, error=str(e))
-        enviar_email(run_id, e)
+        try:
+            enviar_email(run_id, e)
+        except Exception as mail_err:  # el email NO debe tumbar la corrida
+            _log.warning(
+                json.dumps(
+                    {"evento": "email_error", "run_id": run_id, "error": str(mail_err)}
+                )
+            )
         return "failed"
     evento_corrida("success", run_id)
     return "success"
