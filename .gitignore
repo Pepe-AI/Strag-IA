@@ -1,0 +1,32 @@
+# Secretos / credenciales — NUNCA al repo
+.env
+*.env
+!.env.example
+# Cualquier .json en la RAÍZ (llaves de cuenta de servicio de GCP, etc.)
+/*.json
+*service-account*.json
+*service_account*.json
+credenciales*.json
+
+# Entorno Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Estado local del agente/IDE
+.claude/
+
+# Artefactos de preview / chequeo (no son parte del servicio)
+preview_diagnostico.html
+diagnostico.pdf
+docker_out/
+
+# Archivos de referencia / no necesarios para el deploy en Render
+# (el logo real vive en app/assets/stragia_logo.png y NO se ignora)
+*.xlsx
+*.txt
+*.pdf
+*.jpeg
+*.jpg
+

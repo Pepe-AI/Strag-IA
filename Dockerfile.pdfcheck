@@ -1,0 +1,16 @@
+# Chequeo de render_pdf en Linux (WeasyPrint necesita libs nativas de Pango).
+# No es el Dockerfile de producción del servicio (ese llega en la Fase 8).
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi8 libfontconfig1 \
+      fonts-dejavu-core fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN pip install --no-cache-dir "pydantic>=2.11" matplotlib weasyprint
+
+COPY app/ ./app/
+COPY scripts/render_sample.py ./
+
+CMD ["python", "render_sample.py"]

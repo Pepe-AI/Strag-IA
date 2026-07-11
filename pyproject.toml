@@ -1,0 +1,31 @@
+[project]
+name = "stragia"
+version = "0.1.0"
+description = "Generador automático de diagnósticos de Score de Ventas & MKT Digital"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.139.0",
+    "google-api-python-client>=2.198.0",
+    "google-auth>=2.55.2",
+    "google-auth-oauthlib>=1.4.0",
+    "google-genai>=2.11.0",
+    "matplotlib>=3.11.0",
+    "pydantic>=2.11",
+    "uvicorn>=0.51.0",
+    "weasyprint>=69.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8",
+]
+
+# El repo es una aplicación (un servicio), no una librería publicable:
+# uv gestiona dependencias pero no intenta "construir" el proyecto como paquete.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
