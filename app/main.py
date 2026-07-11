@@ -9,6 +9,7 @@ inyectan como dependencias → mockeables en tests; los clientes reales se cable
 la Fase 8.
 """
 
+import logging
 import os
 import uuid
 from collections.abc import Callable
@@ -19,6 +20,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.security import RateLimiter, validar_secreto
+
+# Emitir a stdout los eventos INFO de la corrida (registro por corrida, ARCHITECTURE §9).
+# Sin esto, el logging por defecto (WARNING) los descarta y Render no los ve.
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 app = FastAPI(title="Stragia — diagnósticos")
 
