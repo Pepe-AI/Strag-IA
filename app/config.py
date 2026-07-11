@@ -3,6 +3,7 @@
 Puro (recibe un `env` dict) para poder probarse sin tocar el entorno real.
 """
 
+import base64
 import json
 import os
 from collections.abc import Mapping
@@ -10,6 +11,16 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from app.email_smtp import EmailConfig
+
+
+def _parse_sa(raw: str) -> dict:
+    """Acepta el JSON de la cuenta de servicio crudo o en base64 (más robusto en env vars)."""
+    raw = (raw or "").strip()
+    if not raw:
+        return {}
+    if raw.startswith("{"):
+        return json.loads(raw)
+    return json.loads(base64.b64decode(raw))
 
 
 class Config(BaseModel):
@@ -29,8 +40,7 @@ class Config(BaseModel):
 def cargar_config(env: Mapping[str, str] | None = None) -> Config:
     env = os.environ if env is None else env
 
-    sa_raw = env.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
-    service_account_info = json.loads(sa_raw) if sa_raw else {}
+    service_account_info = _parse_sa(env.get("GOOGLE_SERVICE_ACCOUNT_JSON", ""))
 
     email = None
     if env.get("SMTP_HOST"):

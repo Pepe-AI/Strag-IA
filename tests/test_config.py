@@ -40,6 +40,15 @@ def test_cargar_config_completo():
     assert cfg.email.email_to == "to@x.com"
 
 
+def test_cargar_config_sa_en_base64():
+    import base64
+
+    sa = '{"type":"service_account","client_email":"b@64.iam"}'
+    b64 = base64.b64encode(sa.encode()).decode()
+    cfg = cargar_config({"GOOGLE_SERVICE_ACCOUNT_JSON": b64})
+    assert cfg.service_account_info["client_email"] == "b@64.iam"
+
+
 def test_cargar_config_sin_smtp_deja_email_none_y_modelo_por_defecto():
     cfg = cargar_config({"WEBHOOK_SECRET": "s"})
     assert cfg.email is None
