@@ -123,20 +123,50 @@ def enriquecer(
 
 
 def construir_prompt(entrada: EntradaIA) -> str:
-    """Capa base + grounding/guardrails. La capa-persona del cliente es TBD."""
+    """Capa base + grounding/guardrails. La capa-persona del cliente es TBD.
+
+    Clave: la OBSERVACIÓN del consultor es la evidencia obligatoria, y NO se le pasan
+    medias ni porcentajes (si no los ve, no puede repetirlos en la prosa).
+    """
 
     def _factor_linea(f: FactorParaIA) -> str:
-        obs = f.observaciones.strip() or "(sin observaciones)"
-        return f"- factor {f.factor_id} «{f.nombre}» (media {f.media:.2f}/4, {f.banda}). Observaciones: {obs}"
+        obs = f.observaciones.strip()
+        if not obs:
+            return (
+                f"- factor {f.factor_id} «{f.nombre}» — Observación del consultor: "
+                "(no anotó observación; describe la debilidad típica de este factor, sin inventar datos)"
+            )
+        return f'- factor {f.factor_id} «{f.nombre}» — Observación del consultor: "{obs}"'
 
     lineas = [
-        "Eres un analista de ventas. Redacta hallazgos BREVES y concretos.",
-        "Reglas: usa SOLO la información dada; NO inventes cifras, datos ni causas.",
-        f"Empresa: {entrada.empresa}. Cumplimiento global: "
-        f"{entrada.porcentaje_global:.1f}% ({entrada.banda_global}).",
-        "Escribe una debilidad por cada factor en DEBILIDADES.",
-        "DEBILIDADES:",
+        "Eres un consultor senior de ventas. Redactas los hallazgos de un diagnóstico "
+        "comercial para la dirección de la empresa evaluada.",
+        "",
+        "REGLA MÁS IMPORTANTE: cada hallazgo debe construirse SOBRE LA OBSERVACIÓN que el "
+        "consultor anotó para ese factor. Esa observación es la evidencia: parte de ese hecho "
+        "concreto. No la ignores ni la reemplaces por generalidades.",
+        "",
+        "Cada hallazgo (1 o 2 oraciones, máximo 35 palabras):",
+        "- Parte del hecho que dice la observación.",
+        "- Explica su CONSECUENCIA de negocio (qué se pierde, qué riesgo corre la empresa).",
+        "- Tono profesional y directo.",
+        "",
+        "PROHIBIDO:",
+        "- NO menciones puntajes, medias, porcentajes ni calificaciones (el informe ya los muestra).",
+        "- NO inventes cifras, datos ni causas que no estén en la observación.",
+        '- NO escribas frases vacías tipo "el factor X presenta un cumplimiento bajo".',
+        "",
+        "Ejemplo MALO (jamás hagas esto):",
+        '"La planeación y estrategia comercial presenta un cumplimiento bajo con una media de 1,14."',
+        "Ejemplo BUENO (haz esto):",
+        '"Sin una planeación comercial documentada, el negocio opera por intuición: no hay forma '
+        'de medir el avance ni de corregir el rumbo antes de que se pierda el año."',
+        "",
+        f"Empresa evaluada: {entrada.empresa}.",
+        "",
+        "FACTORES DÉBILES A DIAGNOSTICAR (escribe uno por cada uno):",
         *[_factor_linea(f) for f in entrada.factores_debilidad],
+        "",
         'Responde SOLO JSON: {"debilidades":[{"factor_id":int,"texto":str}]}',
     ]
     return "\n".join(lineas)

@@ -82,7 +82,8 @@ def parse_sheet(raw: Raw) -> SheetNormalizado:
                     f"factor {f['id']} pregunta {i}: CALIFICA inválida ({c!r})"
                 ) from e
 
-        observaciones = " ".join(
+        # Separador entre notas: sin él se pegan y la IA no distingue una de otra.
+        observaciones = " | ".join(
             str(o).strip() for o in obs if o is not None and str(o).strip()
         )
         factores.append(

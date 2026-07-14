@@ -8,12 +8,11 @@ import json
 
 import pytest
 
-from app.domain import EntradaIA
+from app.domain import EntradaIA, FactorParaIA
 from app.hallazgos import (
     IAFallidaError,
     construir_prompt,
     generar_hallazgos,
-    preseleccionar_factores,
 )
 from app.scoring import calcular_scoring
 from vase import sheet_vase
@@ -77,20 +76,33 @@ def test_fallback_tras_dos_fallos():
     assert cli.llamadas == 2  # 1 intento + 1 reintento, no más
 
 
-def test_construir_prompt_incluye_grounding_y_factores():
-    res = calcular_scoring(sheet_vase())
-    deb = preseleccionar_factores(res)
+def test_construir_prompt_aterriza_en_observaciones_y_prohibe_numeros():
     entrada = EntradaIA(
         empresa="VASE Sísmica",
-        porcentaje_global=res.porcentaje,
-        banda_global=res.banda,
-        factores_debilidad=deb,
+        porcentaje_global=59.3,
+        banda_global="BAJO",
+        factores_debilidad=[
+            FactorParaIA(
+                factor_id=5,
+                nombre="Fidelización y Crecimiento de Clientes",
+                media=1.5,
+                banda="BAJO",
+                observaciones="No hay estrategia de recompra; se pierde el cliente tras la venta",
+            )
+        ],
     )
 
     prompt = construir_prompt(entrada)
 
     assert "VASE Sísmica" in prompt
-    assert "Postventa / cuentas clave" in prompt  # un factor preseleccionado
-    assert "NO inventes" in prompt  # guardrail
-    assert "JSON" in prompt  # formato de salida pedido
-    assert "fortaleza" not in prompt.lower()  # ya no se piden fortalezas
+    assert "Fidelización y Crecimiento de Clientes" in prompt
+    # la OBSERVACIÓN (la evidencia) llega al prompt y se le presenta como tal
+    assert "No hay estrategia de recompra" in prompt
+    assert "Observación del consultor" in prompt
+    # guardrails
+    assert "NO inventes" in prompt
+    assert "NO menciones puntajes" in prompt  # que no repita el número
+    assert "JSON" in prompt
+    assert "fortaleza" not in prompt.lower()
+    # no le damos la media: si no la ve, no puede repetirla
+    assert "1.5" not in prompt
